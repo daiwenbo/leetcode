@@ -61,3 +61,24 @@ public:
         return res;
     }
 };
+
+/*another clean solution: */
+class Solution {
+public:
+    vector<int> postorderTraversal(TreeNode* root) {
+        vector<int> ret;
+        if(root==NULL)return ret;
+        stack<TreeNode*> st;
+        st.push(root);
+        while(!st.empty())
+        {
+            TreeNode *curr=st.top();
+            st.pop();
+            if(curr->left)st.push(curr->left);
+            if(curr->right)st.push(curr->right);
+            ret.push_back(curr->val);
+        }
+        reverse(ret.begin(),ret.end());
+        return ret;
+    }
+};
