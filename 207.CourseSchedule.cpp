@@ -71,3 +71,58 @@ public:
         return res;
     }
 };
+
+
+/*a faster solution*/
+/* 396 ms, Your runtime beats 11.88% of cpp submissions.*/
+class Solution {
+public:
+    bool canFinish(int numCourses, vector<pair<int, int>>& prerequisites) {
+        /*try to perform topology sorting: repeatly find nodes with in degree of 0
+        if can not consume all node by this way, means there is a cycle, return false
+        */
+        unordered_map<int, vector<int> > out;
+        unordered_map<int, vector<int> > in;
+        
+        for(int i=0; i<numCourses; i++){
+            vector<int> dummy;
+            out[i] = dummy;
+            in[i] = dummy;
+        }
+        
+        //initialize the out and in adj list
+        for(auto& p : prerequisites){
+            // dependency chart: p.first depends on p.second, 
+            // so nodes are: p.second->p.first
+            out[p.second].push_back(p.first);
+            in[p.first].push_back(p.second);
+        }
+        
+        vector<int> nodesToRemove(1, -1); //initialized it with some random value
+        while ( !nodesToRemove.empty() && !in.empty()){
+            //find all the 0-in nodes
+            nodesToRemove.clear();
+            for (auto& inNode: in){
+               if ( inNode.second.empty() ){
+                   //node i has no in-edge
+                   nodesToRemove.push_back(inNode.first);
+               } 
+            }
+            
+            //remove all the 0-in nodes from "in", 
+            //also remove all its outgoing edges, reflect the change in "in"
+            for(auto nodeToRemove : nodesToRemove){
+                in.erase(nodeToRemove);
+                for(auto downStreamNode : out[nodeToRemove]){
+                    in[downStreamNode].resize(in[downStreamNode].size()-1);
+                    if ( in[downStreamNode].size() == 0){
+                        in[downStreamNode].clear();
+                    }
+                }
+            }
+        }
+        
+        return in.empty();
+        
+    }
+};
