@@ -175,7 +175,8 @@ public:
 };
 
 
-/*my owen problematic solution: */
+/*my owen solution, same idea, but use vector instead of pointer-based array. it's slower
+Runtime: 212 ms. Your runtime beats 33.53% of cpp submissions. */
 /*test cast: 
 [2,1,7,8,0,1,7,3,5,8,9,0,0,7,0,2,2,7,3,5,5]
 [2,6,2,0,1,0,5,4,5,5,3,3,3,4]
@@ -209,10 +210,22 @@ public:
                 continue;
             }
             
-            cout<<i<<" "<<j<<endl;
+            //cout<<i<<" "<<j<<endl;
             
             vector<int> from1 = maxNumberFromOneArray(nums1, i);
             vector<int> from2 = maxNumberFromOneArray(nums2, j);
+            
+            /*
+            cout<<"from1 and from2:"<<endl;
+            for (auto a: from1){
+                cout<<a<<" ";
+            }
+            cout<<endl;
+            for (auto a: from2){
+                cout<<a<<" ";
+            }
+            cout<<endl;
+            */
             
             vector<int> merged;
             merged.clear();
@@ -220,6 +233,7 @@ public:
             {
                 vector<int>::iterator it1 = from1.begin();
                 vector<int>::iterator it2 = from2.begin();
+                
                 while ( it1 != from1.end() || it2 != from2.end() ){
                     if ( it1 != from1.end() && it2 != from2.end() ){
                         if (*it1==*it2){
@@ -227,24 +241,48 @@ public:
                            //s1: from1: 5 5 6 2, from2: 5 5 8 1 => wrong: 55655821, correct: 55855621
                            //s2: from1:  1, from2: 1 1 0
                            //s2: from1: 1 1, from2: 1 1 3 4
+                           int remining1 = from1.end()-it1;
+                           int remining2 = from2.end()-it2;
+                           
+                           //cout<<"R1 and R2: "<<remining1<<" "<<remining2<<endl;
+                           
                            vector<int>::iterator it1Later = it1;
                            vector<int>::iterator it2Later = it2;
                            
-                           while( it1Later != from1.end() && 
-                            it2Later != from2.end() &&
-                            *it1Later == *it2Later ){
-                               it1Later++;
-                               it2Later++;
-                           }
-                           
-                           int value1 = (it1Later!=from1.end())?*it1Later:*it1;
-                           int value2 = (it2Later!=from2.end())?*it2Later:*it2;
-                           if (value1>=value2){
-                               merged.push_back(*it1);
-                               it1++; 
+                           if (remining1 > remining2){
+                               //the remining from2 is shorter
+                               int step = remining2-1;
+                               while (step > 0 && *it1Later == *it2Later){
+                                   it1Later++;
+                                   it2Later++;
+                                   step--;
+                               }
+                               
+                               if (*it1Later >= *it2Later){
+                                   //use from1
+                                   merged.push_back(*it1);
+                                   it1++;
+                               }else{
+                                   merged.push_back(*it2);
+                                   it2++;
+                               }
                            }else{
-                               merged.push_back(*it2);
-                               it2++;
+                               //the remining from1 is shorter
+                               int step = remining1-1;
+                               while (step > 0 && *it1Later == *it2Later){
+                                   it1Later++;
+                                   it2Later++;
+                                   step--;
+                               }
+                               
+                               if (*it2Later >= *it1Later){
+                                   //use from1
+                                   merged.push_back(*it2);
+                                   it2++;
+                               }else{
+                                   merged.push_back(*it1);
+                                   it1++;
+                               }
                            }
                            
                         }else if (*it1>*it2){
@@ -275,37 +313,29 @@ public:
         return res;
     }
     
-    vector<int> maxNumberFromOneArray(vector<int>& nums, int num_digits){
-        vector<int> res;
-        if (num_digits==0){
-            return res;
-        }
-        
-        int size = nums.size();
-        int start = 0;
-        
-        for (int i=num_digits; i>0; i--){
-            /*I need the max number in range [start, size-i].
-            push the max value into res, and tell me its location
-            */
-            start = maxValueAndLocation(nums, start, size-i, res)+1;
-        }
-        
-        return res;
-    }
-    
-    int maxValueAndLocation(vector<int>& v, int start, int end, vector<int>& maxValues){
-        //put max value into maxValues, return its location (offset based on start)
-        int max = v[start];
-        int max_loc = start;
-        for (int i=start+1; i<=end; i++){
-           if (v[i] > max){
-               max = v[i];
-               max_loc = i;
-           } 
-        }
-        
-        maxValues.push_back(max);
-        return max_loc;
-    }
+    vector<int> maxNumberFromOneArray(vector<int>& nums, int k){
+		vector<int> res;
+		if (k==0){
+		    return res;
+		}
+		
+		res.push_back(nums[0]);
+		
+		int size = nums.size();
+		for (int i=1; i<size; i++){
+			// x = k-res.size(): the res still need x numbers
+			// y = size-i-1: the array has y elements left, excluding item i;
+			while (!res.empty() && nums[i] > res.back() && k-res.size() <= size-i-1){
+				res.pop_back();
+			}
+			
+			if (res.size() < k){
+				res.push_back(nums[i]);
+			}
+			
+		}
+		
+		return res;
+	}
 };
+
