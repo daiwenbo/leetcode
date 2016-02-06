@@ -174,3 +174,138 @@ public:
     }
 };
 
+
+/*my owen problematic solution: */
+/*test cast: 
+[2,1,7,8,0,1,7,3,5,8,9,0,0,7,0,2,2,7,3,5,5]
+[2,6,2,0,1,0,5,4,5,5,3,3,3,4]
+35
+*/
+
+class Solution {
+public:
+    bool greater(vector<int>& a, vector<int>& b) const{
+        vector<int>::iterator ia = a.begin();
+        vector<int>::iterator ib = b.begin();
+        
+        while (*ia == *ib && ia != a.end() && ib != b.end() ){
+            ia++;
+            ib++;
+        }
+        
+        return *ia > *ib;
+    }
+
+    vector<int> maxNumber(vector<int>& nums1, vector<int>& nums2, int k) {
+        vector<int> res(k, 0);
+        
+        int m = nums1.size();
+        int n = nums2.size();
+        
+        for (int i=0; i<=m; i++){
+            
+            int j = k-i;
+            if (j<0 || j>n){
+                continue;
+            }
+            
+            cout<<i<<" "<<j<<endl;
+            
+            vector<int> from1 = maxNumberFromOneArray(nums1, i);
+            vector<int> from2 = maxNumberFromOneArray(nums2, j);
+            
+            vector<int> merged;
+            merged.clear();
+            //merge these two
+            {
+                vector<int>::iterator it1 = from1.begin();
+                vector<int>::iterator it2 = from2.begin();
+                while ( it1 != from1.end() || it2 != from2.end() ){
+                    if ( it1 != from1.end() && it2 != from2.end() ){
+                        if (*it1==*it2){
+                           //this is tricky, consider: 
+                           //s1: from1: 5 5 6 2, from2: 5 5 8 1 => wrong: 55655821, correct: 55855621
+                           //s2: from1:  1, from2: 1 1 0
+                           //s2: from1: 1 1, from2: 1 1 3 4
+                           vector<int>::iterator it1Later = it1;
+                           vector<int>::iterator it2Later = it2;
+                           
+                           while( it1Later != from1.end() && 
+                            it2Later != from2.end() &&
+                            *it1Later == *it2Later ){
+                               it1Later++;
+                               it2Later++;
+                           }
+                           
+                           int value1 = (it1Later!=from1.end())?*it1Later:*it1;
+                           int value2 = (it2Later!=from2.end())?*it2Later:*it2;
+                           if (value1>=value2){
+                               merged.push_back(*it1);
+                               it1++; 
+                           }else{
+                               merged.push_back(*it2);
+                               it2++;
+                           }
+                           
+                        }else if (*it1>*it2){
+                           merged.push_back(*it1);
+                           it1++;
+                        }
+                        else{
+                            merged.push_back(*it2);
+                            it2++;
+                        }
+                    }else if (it1!= from1.end()){
+                        //only it1 is valid
+                        merged.push_back(*it1);
+                        it1++;
+                    }else if (it2!= from2.end()){
+                        //only it2 is valid
+                        merged.push_back(*it2);
+                        it2++;
+                    }
+                }
+            }
+            
+            if ( greater(merged, res) ){
+                res = merged;
+            }
+        }
+        
+        return res;
+    }
+    
+    vector<int> maxNumberFromOneArray(vector<int>& nums, int num_digits){
+        vector<int> res;
+        if (num_digits==0){
+            return res;
+        }
+        
+        int size = nums.size();
+        int start = 0;
+        
+        for (int i=num_digits; i>0; i--){
+            /*I need the max number in range [start, size-i].
+            push the max value into res, and tell me its location
+            */
+            start = maxValueAndLocation(nums, start, size-i, res)+1;
+        }
+        
+        return res;
+    }
+    
+    int maxValueAndLocation(vector<int>& v, int start, int end, vector<int>& maxValues){
+        //put max value into maxValues, return its location (offset based on start)
+        int max = v[start];
+        int max_loc = start;
+        for (int i=start+1; i<=end; i++){
+           if (v[i] > max){
+               max = v[i];
+               max_loc = i;
+           } 
+        }
+        
+        maxValues.push_back(max);
+        return max_loc;
+    }
+};
