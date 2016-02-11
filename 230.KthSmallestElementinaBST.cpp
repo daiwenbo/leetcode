@@ -12,6 +12,35 @@ Hint:
     The optimal runtime complexity is O(height of BST).
 */
 
+/*a 24ms version.*/
+class Solution {
+public:
+    int kthSmallest(TreeNode* root, int k) {
+        //non-recursive approach for in-order traversal
+        if (!root) return -1;
+        
+        stack<TreeNode*> s;
+        TreeNode* x = root;
+        
+        int count = 0;
+        while ( !s.empty() || x!=NULL ) { //ATTENTION here!
+            //go all the way down to the left most node
+            while (x){
+                s.push(x);
+                x = x->left;
+            }
+            
+            x = s.top();
+            s.pop();
+            k--;
+            if (k==0) return x->val;
+            x = x->right;
+        }
+        
+        return -1;
+    }
+};
+
 /*Rumtime: 28ms. Your runtime beats 3.64% of cpp submissions.*/
 
 /**
